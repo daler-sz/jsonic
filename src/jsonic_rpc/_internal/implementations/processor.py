@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from jsonic_rpc._internal.abstractions.di import DiInjector
 from jsonic_rpc._internal.abstractions.exception_handling import BaseExceptionConfiguration
-from jsonic_rpc._internal.abstractions.exceptions import InvalidParams, MethodNotFound
+from jsonic_rpc._internal.abstractions.exceptions import InvalidParams, MethodNotFound, InvalidRequest
 from jsonic_rpc._internal.abstractions.method import RegisteredMethod
 from jsonic_rpc._internal.abstractions.processor import BaseProcessor
 from jsonic_rpc._internal.abstractions.router import BaseRouter
@@ -28,14 +28,14 @@ class Processor(BaseProcessor):
     ) -> None:
         path = message.method
         if not method.allow_requests and isinstance(message, Request):
-            raise MethodNotFound(
+            raise InvalidRequest(
                 message=f"Method {path} can not process no-notification requests. "
                 f"Please, consider do not specifying id member in request body",
                 data=path,
             )
 
         if not method.allow_notifications and isinstance(message, Notification):
-            raise MethodNotFound(
+            raise InvalidRequest(
                 message=f"Method {path} can not process notifications. "
                 f"Please, consider specifying id member in request body",
                 data=path,
