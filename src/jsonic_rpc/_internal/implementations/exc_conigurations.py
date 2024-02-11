@@ -8,10 +8,10 @@ from jsonic_rpc._internal.types import OutputMapping, Request
 
 T = TypeVar("T", bound=Exception)
 
-MESSAGE_GETTER = Callable[[Exception], str]
-DATA_GETTER = Callable[[Exception], Any]
+MessageGetter = Callable[[Exception], str]
+DataGetter = Callable[[Exception], Any]
 
-MAP_VALUE = int | tuple[int, MESSAGE_GETTER, DATA_GETTER]
+MapValue = int | tuple[int, MessageGetter, DataGetter]
 
 
 def default_message_getter(exc: Exception):
@@ -24,9 +24,9 @@ def default_data_getter(exc: Exception):
 
 @dataclass
 class MapBasedExceptionConfiguration(BaseExceptionConfiguration[T]):
-    map_: Mapping[type[Exception], MAP_VALUE]
-    message_getter: MESSAGE_GETTER = default_message_getter
-    data_getter: DATA_GETTER = default_data_getter
+    map_: Mapping[type[Exception], MapValue]
+    message_getter: MessageGetter = default_message_getter
+    data_getter: DataGetter = default_data_getter
 
     def filter_map(self, exception: Exception) -> T | None:
         if type(exception) in self.map_:
