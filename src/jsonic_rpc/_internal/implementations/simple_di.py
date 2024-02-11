@@ -37,7 +37,7 @@ class SimpleDiInjector(DiInjector):
             dep = self.container[tp]
             deps[dep_arg.name] = dep
 
-        return RegisteredMethod(
+        return type(method)(
             name=method.name,
             allow_notifications=method.allow_notifications,
             allow_requests=method.allow_requests,

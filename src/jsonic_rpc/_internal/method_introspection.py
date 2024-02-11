@@ -1,8 +1,13 @@
-from inspect import Parameter, Signature, signature
+from inspect import Parameter, Signature, iscoroutinefunction, signature
 from typing import Annotated, Sequence, get_args, get_origin
 
 from jsonic_rpc._internal.abstractions.di import Depends
-from jsonic_rpc._internal.abstractions.method import Method, RegisteredMethod
+from jsonic_rpc._internal.abstractions.method import (
+    AsyncRegisteredMethod,
+    Method,
+    RegisteredMethod,
+    SyncRegisteredMethod,
+)
 
 
 def method_is_by_position(method_signature: Signature) -> bool:
@@ -40,8 +45,18 @@ def make_registered(
 ) -> RegisteredMethod:
     method_signature = signature(method)
     is_by_position = method_is_by_position(method_signature)
+    is_async = iscoroutinefunction(method)
 
-    return RegisteredMethod(
+    if is_async:
+        return AsyncRegisteredMethod(
+            name=get_method_name(method, name),
+            allow_notifications=allow_notifications,
+            allow_requests=allow_requests,
+            is_by_position=is_by_position,
+            origin=method,
+        )
+
+    return SyncRegisteredMethod(
         name=get_method_name(method, name),
         allow_notifications=allow_notifications,
         allow_requests=allow_requests,

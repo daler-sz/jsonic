@@ -2,21 +2,34 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 
 
-class MethodByName(Protocol):
+class SyncMethodByName(Protocol):
     def __call__(self, *args, **kwargs) -> Any:
         ...
 
 
-class MethodByPosition(Protocol):
+class SyncMethodByPosition(Protocol):
     def __call__(self, *args) -> Any:
         ...
 
 
-Method = MethodByName | MethodByPosition
+class AsyncMethodByName(Protocol):
+    async def __call__(self, *args, **kwargs) -> Any:
+        ...
 
 
-@dataclass(frozen=True)
-class RegisteredMethod:
+class AsyncMethodByPosition(Protocol):
+    async def __call__(self, *args) -> Any:
+        ...
+
+
+SyncMethod = SyncMethodByName | SyncMethodByPosition
+AsyncMethod = AsyncMethodByName | AsyncMethodByPosition
+
+Method = SyncMethod | AsyncMethod
+
+
+@dataclass(frozen=True, kw_only=True)
+class BaseRegisteredMethod:
     name: str
     is_by_position: bool
     origin: Method
@@ -25,3 +38,22 @@ class RegisteredMethod:
 
     def __call__(self, *args, **kwargs):
         return self.origin(*args, **kwargs)
+
+
+@dataclass(frozen=True)
+class SyncRegisteredMethod(BaseRegisteredMethod):
+    origin: SyncMethod
+
+    def __call__(self, *args, **kwargs):
+        return self.origin(*args, **kwargs)
+
+
+@dataclass(frozen=True)
+class AsyncRegisteredMethod(BaseRegisteredMethod):
+    origin: AsyncMethod
+
+    async def __call__(self, *args, **kwargs):
+        return await self.origin(*args, **kwargs)
+
+
+RegisteredMethod = SyncRegisteredMethod | AsyncRegisteredMethod

@@ -3,8 +3,8 @@ from dataclasses import dataclass
 
 from jsonic_rpc._internal.abstractions.di import DiInjector
 from jsonic_rpc._internal.abstractions.exception_handling import BaseExceptionConfiguration
-from jsonic_rpc._internal.abstractions.exceptions import InvalidParams, MethodNotFound, InvalidRequest
-from jsonic_rpc._internal.abstractions.method import RegisteredMethod
+from jsonic_rpc._internal.abstractions.exceptions import InvalidParams, InvalidRequest
+from jsonic_rpc._internal.abstractions.method import AsyncRegisteredMethod, RegisteredMethod
 from jsonic_rpc._internal.abstractions.processor import BaseProcessor
 from jsonic_rpc._internal.abstractions.router import BaseRouter
 from jsonic_rpc._internal.abstractions.serializing import BaseDumper, BaseLoader
@@ -21,12 +21,16 @@ class Processor(BaseProcessor):
     dumper: BaseDumper
     di_injector: DiInjector
 
-    def _validate_message(
-        self,
-        message: Message,
-        method: RegisteredMethod,
-    ) -> None:
+    def _validate_message(self, message: Message, method: RegisteredMethod, async_: bool) -> None:
         path = message.method
+
+        method_is_async = isinstance(method, AsyncRegisteredMethod)
+        if method_is_async and not async_:
+            raise TypeError(f"Method {path} is async, but it is called as sync method")
+
+        if not method_is_async and async_:
+            raise TypeError(f"Method {path} is sync, but it is called as async method")
+
         if not method.allow_requests and isinstance(message, Request):
             raise InvalidRequest(
                 message=f"Method {path} can not process no-notification requests. "
@@ -57,7 +61,7 @@ class Processor(BaseProcessor):
 
     def _process_message(self, message: Message) -> SuccessResponse | None:
         method = self.router.get_method(message.method)
-        self._validate_message(message, method)
+        self._validate_message(message, method, async_=False)
         injected_method = self.di_injector.inject(method, self.loader, message.params)
         return injected_method()
 
@@ -66,4 +70,17 @@ class Processor(BaseProcessor):
 
     def _process_request(self, request: Request) -> SuccessResponse:
         result = self._process_message(request)
+        return SuccessResponse(id=request.id, jsonrpc=request.jsonrpc, result=result)
+
+    async def _async_process_message(self, message: Message) -> SuccessResponse | None:
+        method = self.router.get_method(message.method)
+        self._validate_message(message, method, async_=True)
+        injected_method = self.di_injector.inject(method, self.loader, message.params)
+        return await injected_method()
+
+    async def _async_process_notification(self, notification: Notification) -> None:
+        await self._async_process_message(notification)
+
+    async def _async_process_request(self, request: Request) -> SuccessResponse:
+        result = await self._async_process_message(request)
         return SuccessResponse(id=request.id, jsonrpc=request.jsonrpc, result=result)

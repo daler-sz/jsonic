@@ -23,6 +23,22 @@ class BaseProcessor(ABC):
     def _process_notification(self, message: Notification) -> None:
         ...
 
+    @abstractmethod
+    async def _async_process_request(self, request: Request) -> Response:
+        ...
+
+    @abstractmethod
+    async def _async_process_notification(self, message: Notification) -> None:
+        ...
+
+    @final
+    def _process_exception(self, exc: Exception, message: Request, data: InputMapping) -> OutputMapping:
+        filter_result = self.exception_configuration.filter_map(exc)
+        if filter_result is not None:
+            return self.exception_configuration.dump(self.dumper, filter_result, message)
+        logger.exception("Unexpected exception", exc_info=exc, extra={"data": data})
+        return self.dumper.dump_exception(InternalError(message="Unexpected error", data=data), message)
+
     @final
     def process_single(self, data: InputMapping) -> OutputMapping | None:
         try:
@@ -31,7 +47,11 @@ class BaseProcessor(ABC):
             return self.dumper.dump_exception(exc)
 
         if isinstance(message, Notification):
-            return self._process_notification(message)
+            try:
+                self._process_notification(message)
+            except Exception as exc:
+                logger.exception("Unexpected exception", exc_info=exc, extra={"data": data})
+            return None
 
         try:
             response = self._process_request(message)
@@ -41,8 +61,28 @@ class BaseProcessor(ABC):
             return self.dumper.dump_exception(exc, message)
 
         except Exception as exc:
-            filter_result = self.exception_configuration.filter_map(exc)
-            if filter_result is not None:
-                return self.exception_configuration.dump(self.dumper, filter_result, message)
-            logger.exception("Unexpected exception", exc_info=exc, extra={"data": data})
-            return self.dumper.dump_exception(InternalError(message="Unexpected error", data=data), message)
+            return self._process_exception(exc, message, data)
+
+    @final
+    async def async_process_single(self, data: InputMapping) -> OutputMapping | None:
+        try:
+            message = self.loader.load_message(data)
+        except InvalidRequest as exc:
+            return self.dumper.dump_exception(exc)
+
+        if isinstance(message, Notification):
+            try:
+                await self._async_process_notification(message)
+            except Exception as exc:
+                logger.exception("Unexpected exception", exc_info=exc, extra={"data": data})
+            return None
+
+        try:
+            response = await self._async_process_request(message)
+            return self.dumper.dump_response(response)
+
+        except JsonRpcError as exc:
+            return self.dumper.dump_exception(exc, message)
+
+        except Exception as exc:
+            return self._process_exception(exc, message, data)
