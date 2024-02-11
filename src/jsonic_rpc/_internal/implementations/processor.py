@@ -27,16 +27,16 @@ class Processor(BaseProcessor):
         method: RegisteredMethod,
     ) -> None:
         path = message.method
-        if method.is_notification and not isinstance(message, Notification):
+        if not method.allow_requests and isinstance(message, Request):
             raise MethodNotFound(
-                message=f"Method {path} processes notifications. "
+                message=f"Method {path} can not process no-notification requests. "
                 f"Please, consider do not specifying id member in request body",
                 data=path,
             )
 
-        if not method.is_notification and isinstance(message, Notification):
+        if not method.allow_notifications and isinstance(message, Notification):
             raise MethodNotFound(
-                message=f"Method {path} is not suitable for processing notifications. "
+                message=f"Method {path} can not process notifications. "
                 f"Please, consider specifying id member in request body",
                 data=path,
             )

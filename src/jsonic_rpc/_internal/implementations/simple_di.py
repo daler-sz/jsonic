@@ -16,7 +16,10 @@ class SimpleDiInjector(DiInjector):
         self.container = container
 
     def inject(
-        self, method: RegisteredMethod, loader: BaseLoader, params: Params
+        self,
+        method: RegisteredMethod,
+        loader: BaseLoader,
+        params: Params,
     ) -> RegisteredMethod:
         method_signature = signature(method.origin)
 
@@ -36,7 +39,8 @@ class SimpleDiInjector(DiInjector):
 
         return RegisteredMethod(
             name=method.name,
-            is_notification=method.is_notification,
+            allow_notifications=method.allow_notifications,
+            allow_requests=method.allow_requests,
             is_by_position=method.is_by_position,
             origin=partial(method, *positionals, **nameds, **deps),
         )

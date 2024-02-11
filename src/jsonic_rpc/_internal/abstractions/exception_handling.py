@@ -16,6 +16,9 @@ class BaseExceptionConfiguration(ABC, Generic[T]):
 
     @abstractmethod
     def dump(
-        self, dumper: BaseDumper, exception: T, request: Request | None = None
+        self,
+        dumper: BaseDumper,
+        exception: T,
+        request: Request | None = None,
     ) -> OutputMapping:
         ...

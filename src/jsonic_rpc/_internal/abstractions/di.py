@@ -18,6 +18,9 @@ Dependency = Annotated[T, Depends()]
 class DiInjector(ABC):
     @abstractmethod
     def inject(
-        self, method: RegisteredMethod, loader: BaseLoader, params: Params
+        self,
+        method: RegisteredMethod,
+        loader: BaseLoader,
+        params: Params,
     ) -> RegisteredMethod:
         ...

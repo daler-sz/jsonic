@@ -61,10 +61,7 @@ class SimpleLoader(BaseLoader):
             try:
                 if arg.kind == Parameter.POSITIONAL_ONLY:
                     positionals.append(params.pop(arg.name))
-                elif arg.kind in (
-                    Parameter.KEYWORD_ONLY,
-                    Parameter.POSITIONAL_OR_KEYWORD
-                ):
+                elif arg.kind in (Parameter.KEYWORD_ONLY, Parameter.POSITIONAL_OR_KEYWORD):
                     nameds[arg.name] = params.pop(arg.name)
                 elif arg.kind == Parameter.VAR_POSITIONAL:
                     positionals.extend(params.values())
@@ -72,9 +69,7 @@ class SimpleLoader(BaseLoader):
                     nameds = {**nameds, **params}
 
             except KeyError:
-                raise InvalidParams(
-                    message="Invalid params member in request body", data=arg.name
-                )
+                raise InvalidParams(message="Invalid params member in request body", data=arg.name)
 
         return positionals, nameds
 
@@ -101,7 +96,9 @@ class SimpleDumper(BaseDumper):
             }
 
     def dump_exception(
-        self, exception: JsonRpcError, request: Request | None = None
+        self,
+        exception: JsonRpcError,
+        request: Request | None = None,
     ) -> OutputMapping:
         return {
             "jsonrpc": "2.0",

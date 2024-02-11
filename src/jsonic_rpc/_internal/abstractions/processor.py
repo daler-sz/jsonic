@@ -43,10 +43,6 @@ class BaseProcessor(ABC):
         except Exception as exc:
             filter_result = self.exception_configuration.filter_map(exc)
             if filter_result is not None:
-                return self.exception_configuration.dump(
-                    self.dumper, filter_result, message
-                )
+                return self.exception_configuration.dump(self.dumper, filter_result, message)
             logger.exception("Unexpected exception", exc_info=exc, extra={"data": data})
-            return self.dumper.dump_exception(
-                InternalError(message="Unexpected error", data=data), message
-            )
+            return self.dumper.dump_exception(InternalError(message="Unexpected error", data=data), message)

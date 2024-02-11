@@ -11,16 +11,20 @@ from jsonic_rpc._internal.method_introspection import make_registered
 @dataclass
 class Router(BaseRouter):
     prefix: str = ""
-    routes: MutableMapping[str, RegisteredMethod] = field(
-        default_factory=dict, init=False
-    )
+    routes: MutableMapping[str, RegisteredMethod] = field(default_factory=dict, init=False)
     routers: MutableSequence[BaseRouter] = field(default_factory=list, init=False)
 
     def _get_prefix(self):
         return f"{self.prefix}." if self.prefix else ""
 
-    def _register_method(self, method: Method, name: str | None) -> RegisteredMethod:
-        registered_method = make_registered(method, name)
+    def _register_method(
+        self,
+        method: Method,
+        name: str | None,
+        allow_notifications: bool,
+        allow_requests: bool,
+    ) -> RegisteredMethod:
+        registered_method: RegisteredMethod = make_registered(method, allow_notifications, allow_requests, name)
         self.routes[f"{self._get_prefix()}{registered_method.name}"] = registered_method
         return registered_method
 

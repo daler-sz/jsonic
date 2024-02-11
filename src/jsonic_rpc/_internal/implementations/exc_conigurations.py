@@ -34,7 +34,10 @@ class MapBasedExceptionConfiguration(BaseExceptionConfiguration[T]):
         return None
 
     def dump(
-        self, dumper: BaseDumper, exception: T, request: Request | None = None
+        self,
+        dumper: BaseDumper,
+        exception: T,
+        request: Request | None = None,
     ) -> OutputMapping:
         map_value = self.map_[type(exception)]
 
