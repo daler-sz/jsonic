@@ -3,6 +3,7 @@ from typing import Any, Iterable, Literal, Mapping
 
 RequestId = int | str | None
 Params = Iterable | Mapping | None
+Result = Any
 
 
 @dataclass
@@ -36,7 +37,7 @@ class BaseResponse(JsonRpc20):
 
 @dataclass
 class SuccessResponse(BaseResponse):
-    result: Any
+    result: Result
 
 
 @dataclass

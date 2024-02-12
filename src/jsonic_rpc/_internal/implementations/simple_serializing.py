@@ -1,10 +1,10 @@
 import collections.abc
 from inspect import Parameter
-from typing import Any, Iterable, Sequence, cast
+from typing import Sequence, cast
 
 from jsonic_rpc._internal.abstractions.exceptions import InvalidParams, InvalidRequest, JsonRpcError
 from jsonic_rpc._internal.abstractions.method import RegisteredMethod
-from jsonic_rpc._internal.abstractions.serializing import BaseDumper, BaseLoader
+from jsonic_rpc._internal.abstractions.serializing import BaseDumper, BaseLoader, MethodArgs
 from jsonic_rpc._internal.types import (
     ErrorResponse,
     InputMapping,
@@ -42,36 +42,47 @@ class SimpleLoader(BaseLoader):
             raise InvalidRequest(message="Invalid request object", data=data)
 
     def load_args(
-        self, method: RegisteredMethod, method_args: Sequence[Parameter], params: Params
-    ) -> tuple[Iterable[Any], Mapping[str, Any]]:
+        self,
+        method: RegisteredMethod,
+        method_args: Sequence[Parameter],
+        params: Params,
+    ) -> MethodArgs:
         if params is None:
-            return [], {}
+            return MethodArgs([], {}, {})
 
         if method.is_by_position:
-            return params, {}
+            return MethodArgs(params, {}, {method_args[0].name: params})
 
         #  for here params is already validated and we sure that it is Mapping
         params = cast(Mapping, params)
         params = dict(params)
 
         positionals = []
-        nameds = {}
+        keywords = {}
+        map_ = {}
 
         for arg in method_args:
             try:
-                if arg.kind == Parameter.POSITIONAL_ONLY:
-                    positionals.append(params.pop(arg.name))
-                elif arg.kind in (Parameter.KEYWORD_ONLY, Parameter.POSITIONAL_OR_KEYWORD):
-                    nameds[arg.name] = params.pop(arg.name)
-                elif arg.kind == Parameter.VAR_POSITIONAL:
-                    positionals.extend(params.values())
-                elif arg.kind == Parameter.VAR_KEYWORD:
-                    nameds = {**nameds, **params}
-
+                name = arg.name
+                value = params.pop(name)
             except KeyError:
                 raise InvalidParams(message="Invalid params member in request body", data=arg.name)
 
-        return positionals, nameds
+            if arg.kind == Parameter.POSITIONAL_ONLY:
+                positionals.append(value)
+                map_[name] = value
+            elif arg.kind in (Parameter.KEYWORD_ONLY, Parameter.POSITIONAL_OR_KEYWORD):
+                keywords[name] = value
+                map_[name] = value
+            elif arg.kind == Parameter.VAR_POSITIONAL:
+                values = params.values()
+                positionals.extend(values)
+                map_[name] = values
+            elif arg.kind == Parameter.VAR_KEYWORD:
+                keywords = {**keywords, **params}
+                map_[name] = params
+
+        return MethodArgs(positionals, keywords, map_)
 
 
 class SimpleDumper(BaseDumper):

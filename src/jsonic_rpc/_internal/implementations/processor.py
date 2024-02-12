@@ -1,14 +1,15 @@
 import collections
 from dataclasses import dataclass
+from typing import Any
 
-from jsonic_rpc._internal.abstractions.di import DiInjector
+from jsonic_rpc._internal.abstractions.di import BaseDiInjector
 from jsonic_rpc._internal.abstractions.exception_handling import BaseExceptionConfiguration
 from jsonic_rpc._internal.abstractions.exceptions import InvalidParams, InvalidRequest
 from jsonic_rpc._internal.abstractions.method import AsyncRegisteredMethod, RegisteredMethod
 from jsonic_rpc._internal.abstractions.processor import BaseProcessor
 from jsonic_rpc._internal.abstractions.router import BaseRouter
 from jsonic_rpc._internal.abstractions.serializing import BaseDumper, BaseLoader
-from jsonic_rpc._internal.types import Message, Notification, Request, SuccessResponse
+from jsonic_rpc._internal.types import Message, Notification, Request, SuccessResponse, Result
 
 Mapping = collections.abc.Mapping
 
@@ -19,7 +20,7 @@ class Processor(BaseProcessor):
     exception_configuration: BaseExceptionConfiguration
     loader: BaseLoader
     dumper: BaseDumper
-    di_injector: DiInjector
+    di_injector: BaseDiInjector
 
     def _validate_message(self, message: Message, method: RegisteredMethod, async_: bool) -> None:
         path = message.method
@@ -59,11 +60,10 @@ class Processor(BaseProcessor):
                 data={"params": message.params, "method": path},
             )
 
-    def _process_message(self, message: Message) -> SuccessResponse | None:
+    def _process_message(self, message: Message) -> Any:
         method = self.router.get_method(message.method)
         self._validate_message(message, method, async_=False)
-        injected_method = self.di_injector.inject(method, self.loader, message.params)
-        return injected_method()
+        return self.di_injector.call_injected(method, self.loader, message.params)
 
     def _process_notification(self, notification: Notification) -> None:
         self._process_message(notification)
@@ -72,11 +72,10 @@ class Processor(BaseProcessor):
         result = self._process_message(request)
         return SuccessResponse(id=request.id, jsonrpc=request.jsonrpc, result=result)
 
-    async def _async_process_message(self, message: Message) -> SuccessResponse | None:
+    async def _async_process_message(self, message: Message) -> Result:
         method = self.router.get_method(message.method)
         self._validate_message(message, method, async_=True)
-        injected_method = self.di_injector.inject(method, self.loader, message.params)
-        return await injected_method()
+        return await self.di_injector.async_call_injected(method, self.loader, message.params)
 
     async def _async_process_notification(self, notification: Notification) -> None:
         await self._async_process_message(notification)
