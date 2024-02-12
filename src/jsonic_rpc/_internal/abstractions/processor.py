@@ -1,34 +1,53 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import final
+from typing import Generic, TypeVar, final
 
 from jsonic_rpc._internal.abstractions.exception_handling import BaseExceptionConfiguration
 from jsonic_rpc._internal.abstractions.exceptions import InternalError, InvalidRequest, JsonRpcError
 from jsonic_rpc._internal.abstractions.serializing import BaseDumper, BaseLoader
 from jsonic_rpc._internal.types import InputMapping, Notification, OutputMapping, Request, Response
 
+Context = TypeVar("Context")
+
+
 logger = logging.getLogger("jsonic_rpc")
 
 
-class BaseProcessor(ABC):
+class BaseProcessor(ABC, Generic[Context]):
     loader: BaseLoader
     dumper: BaseDumper
     exception_configuration: BaseExceptionConfiguration
 
     @abstractmethod
-    def _process_request(self, request: Request) -> Response:
+    def _process_request(
+        self,
+        request: Request,
+        context: Context | None,
+    ) -> Response:
         ...
 
     @abstractmethod
-    def _process_notification(self, message: Notification) -> None:
+    def _process_notification(
+        self,
+        message: Notification,
+        context: Context | None,
+    ) -> None:
         ...
 
     @abstractmethod
-    async def _async_process_request(self, request: Request) -> Response:
+    async def _async_process_request(
+        self,
+        request: Request,
+        context: Context | None,
+    ) -> Response:
         ...
 
     @abstractmethod
-    async def _async_process_notification(self, message: Notification) -> None:
+    async def _async_process_notification(
+        self,
+        message: Notification,
+        context: Context | None,
+    ) -> None:
         ...
 
     @final
@@ -40,7 +59,11 @@ class BaseProcessor(ABC):
         return self.dumper.dump_exception(InternalError(message="Unexpected error", data=data), message)
 
     @final
-    def process_single(self, data: InputMapping) -> OutputMapping | None:
+    def process_single(
+        self,
+        data: InputMapping,
+        context: Context | None = None,
+    ) -> OutputMapping | None:
         try:
             message = self.loader.load_message(data)
         except InvalidRequest as exc:
@@ -48,13 +71,13 @@ class BaseProcessor(ABC):
 
         if isinstance(message, Notification):
             try:
-                self._process_notification(message)
+                self._process_notification(message, context)
             except Exception as exc:
                 logger.exception("Unexpected exception", exc_info=exc, extra={"data": data})
             return None
 
         try:
-            response = self._process_request(message)
+            response = self._process_request(message, context)
             return self.dumper.dump_response(response)
 
         except JsonRpcError as exc:
@@ -64,7 +87,11 @@ class BaseProcessor(ABC):
             return self._process_exception(exc, message, data)
 
     @final
-    async def async_process_single(self, data: InputMapping) -> OutputMapping | None:
+    async def async_process_single(
+        self,
+        data: InputMapping,
+        context: Context | None = None,
+    ) -> OutputMapping | None:
         try:
             message = self.loader.load_message(data)
         except InvalidRequest as exc:
@@ -72,13 +99,13 @@ class BaseProcessor(ABC):
 
         if isinstance(message, Notification):
             try:
-                await self._async_process_notification(message)
+                await self._async_process_notification(message, context)
             except Exception as exc:
                 logger.exception("Unexpected exception", exc_info=exc, extra={"data": data})
             return None
 
         try:
-            response = await self._async_process_request(message)
+            response = await self._async_process_request(message, context)
             return self.dumper.dump_response(response)
 
         except JsonRpcError as exc:

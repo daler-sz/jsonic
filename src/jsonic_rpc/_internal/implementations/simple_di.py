@@ -1,14 +1,14 @@
 from inspect import Parameter, signature
-from typing import Any, Mapping, get_args, Iterable
+from typing import Any, Iterable, Mapping, get_args
 
 from jsonic_rpc._internal.abstractions.di import BaseDiInjector
-from jsonic_rpc._internal.abstractions.method import RegisteredMethod, SyncRegisteredMethod, AsyncRegisteredMethod
+from jsonic_rpc._internal.abstractions.method import AsyncRegisteredMethod, RegisteredMethod, SyncRegisteredMethod
 from jsonic_rpc._internal.abstractions.serializing import BaseLoader
 from jsonic_rpc._internal.method_introspection import method_depends_args, method_non_depends_args
 from jsonic_rpc._internal.types import Params, Result
 
 
-class SimpleDiInjector(BaseDiInjector):
+class SimpleDiInjector(BaseDiInjector[dict]):
     """Silly di container. Not recommended for production"""
 
     def __init__(self, container: Mapping[Any, Any]):
@@ -39,15 +39,23 @@ class SimpleDiInjector(BaseDiInjector):
         method: SyncRegisteredMethod,
         loader: BaseLoader,
         params: Params,
+        context: dict | None,
     ) -> Result:
+        if not context:
+            context = {}
+
         positionals, keywords = self._load_args(method, loader, params)
-        return method.origin(*positionals, **keywords)
+        return method.origin(*positionals, **keywords, **context)
 
     async def async_call_injected(
         self,
         method: AsyncRegisteredMethod,
         loader: BaseLoader,
         params: Params,
+        context: dict | None,
     ) -> Result:
+        if not context:
+            context = {}
+
         positionals, keywords = self._load_args(method, loader, params)
-        return await method.origin(*positionals, **keywords)
+        return await method.origin(*positionals, **keywords, **context)

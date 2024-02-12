@@ -1,5 +1,6 @@
+from dataclasses import dataclass
 from inspect import Parameter, signature
-from typing import Any, get_origin, Annotated, get_args
+from typing import Annotated, Any, get_args, get_origin
 
 from dishka import Container
 from dishka.integrations.base import wrap_injection
@@ -8,7 +9,7 @@ from jsonic_rpc._internal.abstractions.di import BaseDiInjector, Depends
 from jsonic_rpc._internal.abstractions.method import RegisteredMethod
 from jsonic_rpc._internal.abstractions.serializing import BaseLoader, MethodArgs
 from jsonic_rpc._internal.method_introspection import method_non_depends_args
-from jsonic_rpc._internal.types import Params
+from jsonic_rpc._internal.types import Params, Result
 
 
 def default_parse_dependency(
@@ -30,7 +31,12 @@ def default_parse_dependency(
         return dep.param
 
 
-class DiInjector(BaseDiInjector):
+@dataclass
+class Context:
+    container: Container
+
+
+class DiInjector(BaseDiInjector[Context]):
     def __init__(self, container: Container):
         self._container = container
 
@@ -39,11 +45,13 @@ class DiInjector(BaseDiInjector):
         method: RegisteredMethod,
         loader: BaseLoader,
         params: Params,
-    ) -> RegisteredMethod:
+        context: Context | None,
+    ) -> Result:
         non_dep_args = method_non_depends_args(signature(method.origin))
         loaded_args = loader.load_args(method, non_dep_args, params)
+        container = context.container if context else self._container
 
-        with self._container({MethodArgs: loaded_args}) as subcontainer:
+        with container({MethodArgs: loaded_args}) as subcontainer:
             injected = wrap_injection(
                 method.origin, container_getter=lambda a, b: subcontainer, parse_dependency=default_parse_dependency
             )
@@ -54,11 +62,13 @@ class DiInjector(BaseDiInjector):
         method: RegisteredMethod,
         loader: BaseLoader,
         params: Params,
+        context: Context | None,
     ) -> RegisteredMethod:
-        non_dep_args = method_non_depends_args(method)
+        non_dep_args = method_non_depends_args(signature(method.origin))
         loaded_args = loader.load_args(method, non_dep_args, params)
+        container = context.container if context else self._container
 
-        async with self._container({MethodArgs: loaded_args}) as subcontainer:
+        async with container({MethodArgs: loaded_args}) as subcontainer:
             injected = wrap_injection(
                 method.origin, container_getter=lambda: subcontainer, parse_dependency=default_parse_dependency
             )

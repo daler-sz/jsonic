@@ -51,7 +51,7 @@ class SimpleLoader(BaseLoader):
             return MethodArgs([], {}, {})
 
         if method.is_by_position:
-            return MethodArgs(params, {}, {method_args[0].name: params})
+            return MethodArgs(tuple(params), {}, {method_args[0].name: params})
 
         #  for here params is already validated and we sure that it is Mapping
         params = cast(Mapping, params)

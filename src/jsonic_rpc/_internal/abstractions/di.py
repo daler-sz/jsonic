@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Annotated, Any, TypeVar
+from typing import Annotated, Any, Generic, TypeVar
 
-from jsonic_rpc._internal.abstractions.method import SyncRegisteredMethod, AsyncRegisteredMethod
+from jsonic_rpc._internal.abstractions.method import AsyncRegisteredMethod, SyncRegisteredMethod
 from jsonic_rpc._internal.abstractions.serializing import BaseLoader
-from jsonic_rpc._internal.types import Params, SuccessResponse
+from jsonic_rpc._internal.types import Params, Result
 
 
 class Depends:
@@ -12,17 +12,19 @@ class Depends:
 
 
 T = TypeVar("T")
+Context = TypeVar("Context")
 Dependency = Annotated[T, Depends()]
 
 
-class BaseDiInjector(ABC):
+class BaseDiInjector(ABC, Generic[Context]):
     @abstractmethod
     def call_injected(
         self,
         method: SyncRegisteredMethod,
         loader: BaseLoader,
         params: Params,
-    ) -> SuccessResponse:
+        context: Context | None,
+    ) -> Result:
         ...
 
     @abstractmethod
@@ -31,5 +33,6 @@ class BaseDiInjector(ABC):
         method: AsyncRegisteredMethod,
         loader: BaseLoader,
         params: Params,
-    ) -> SuccessResponse:
+        context: Context | None,
+    ) -> Result:
         ...
