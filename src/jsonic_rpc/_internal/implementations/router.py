@@ -14,8 +14,10 @@ class Router(BaseRouter):
     routes: MutableMapping[str, RegisteredMethod] = field(default_factory=dict, init=False)
     routers: MutableSequence[BaseRouter] = field(default_factory=list, init=False)
 
-    def _get_prefix(self):
-        return f"{self.prefix}." if self.prefix else ""
+    def _make_path(self, name):
+        if self.prefix:
+            return f"{self.prefix}.{name}"
+        return name
 
     def _register_method(
         self,
@@ -25,14 +27,16 @@ class Router(BaseRouter):
         allow_requests: bool,
     ) -> RegisteredMethod:
         registered_method: RegisteredMethod = make_registered(method, allow_notifications, allow_requests, name)
-        self.routes[f"{self._get_prefix()}{registered_method.name}"] = registered_method
+        path = self._make_path(registered_method.name)
+        self.routes[path] = registered_method
         return registered_method
 
     def include_router(self, router: "BaseRouter") -> None:
         self.routers.append(router)
         if isinstance(router, Router):
-            for name, method in router.routes.items():
-                self.routes[f"{self._get_prefix()}{name}"] = method
+            for path, method in router.routes.items():
+                new_path = self._make_path(path)
+                self.routes[new_path] = method
 
     def get_method(self, path: str) -> RegisteredMethod:
         try:
