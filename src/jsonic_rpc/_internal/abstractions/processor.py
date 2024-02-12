@@ -2,10 +2,25 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, final
 
-from jsonic_rpc._internal.abstractions.exception_handling import BaseExceptionConfiguration
-from jsonic_rpc._internal.abstractions.exceptions import InternalError, InvalidRequest, JsonRpcError
-from jsonic_rpc._internal.abstractions.serializing import BaseDumper, BaseLoader
-from jsonic_rpc._internal.types import InputMapping, Notification, OutputMapping, Request, Response
+from jsonic_rpc._internal.abstractions.exception_handling import (
+    BaseExceptionConfiguration,
+)
+from jsonic_rpc._internal.abstractions.exceptions import (
+    InternalError,
+    InvalidRequest,
+    JsonRpcError,
+)
+from jsonic_rpc._internal.abstractions.serializing import (
+    BaseDumper,
+    BaseLoader,
+)
+from jsonic_rpc._internal.types import (
+    InputMapping,
+    Notification,
+    OutputMapping,
+    Request,
+    Response,
+)
 
 Context = TypeVar("Context")
 
@@ -51,12 +66,20 @@ class BaseProcessor(ABC, Generic[Context]):
         ...
 
     @final
-    def _process_exception(self, exc: Exception, message: Request, data: InputMapping) -> OutputMapping:
+    def _process_exception(
+        self, exc: Exception, message: Request, data: InputMapping
+    ) -> OutputMapping:
         filter_result = self.exception_configuration.filter_map(exc)
         if filter_result is not None:
-            return self.exception_configuration.dump(self.dumper, filter_result, message)
-        logger.exception("Unexpected exception", exc_info=exc, extra={"data": data})
-        return self.dumper.dump_exception(InternalError(message="Unexpected error", data=data), message)
+            return self.exception_configuration.dump(
+                self.dumper, filter_result, message
+            )
+        logger.exception(
+            "Unexpected exception", exc_info=exc, extra={"data": data}
+        )
+        return self.dumper.dump_exception(
+            InternalError(message="Unexpected error", data=data), message
+        )
 
     @final
     def process_single(
@@ -73,7 +96,9 @@ class BaseProcessor(ABC, Generic[Context]):
             try:
                 self._process_notification(message, context)
             except Exception as exc:
-                logger.exception("Unexpected exception", exc_info=exc, extra={"data": data})
+                logger.exception(
+                    "Unexpected exception", exc_info=exc, extra={"data": data}
+                )
             return None
 
         try:
@@ -101,7 +126,9 @@ class BaseProcessor(ABC, Generic[Context]):
             try:
                 await self._async_process_notification(message, context)
             except Exception as exc:
-                logger.exception("Unexpected exception", exc_info=exc, extra={"data": data})
+                logger.exception(
+                    "Unexpected exception", exc_info=exc, extra={"data": data}
+                )
             return None
 
         try:

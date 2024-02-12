@@ -31,11 +31,11 @@ ignore_missing_imports = true
 
 [tool.isort]
 multi_line_output = 3
-line_length = 120
+line_length = 79
 include_trailing_comma = true
 combine_as_imports = true
 remove_redundant_aliases = true
 
 
 [tool.ruff]
-line-length = 120
+line-length = 79

@@ -2,9 +2,16 @@ from inspect import Parameter, signature
 from typing import Any, Iterable, Mapping, get_args
 
 from jsonic_rpc._internal.abstractions.di import BaseDiInjector
-from jsonic_rpc._internal.abstractions.method import AsyncRegisteredMethod, RegisteredMethod, SyncRegisteredMethod
+from jsonic_rpc._internal.abstractions.method import (
+    AsyncRegisteredMethod,
+    RegisteredMethod,
+    SyncRegisteredMethod,
+)
 from jsonic_rpc._internal.abstractions.serializing import BaseLoader
-from jsonic_rpc._internal.method_introspection import method_depends_args, method_non_depends_args
+from jsonic_rpc._internal.method_introspection import (
+    method_depends_args,
+    method_non_depends_args,
+)
 from jsonic_rpc._internal.types import Params, Result
 
 
@@ -27,7 +34,9 @@ class SimpleDiInjector(BaseDiInjector[dict]):
 
         for dep_arg in dep_args:
             if dep_arg.kind == Parameter.POSITIONAL_ONLY:
-                raise TypeError("Positional only DI dependencies are not supported")
+                raise TypeError(
+                    "Positional only DI dependencies are not supported"
+                )
 
             tp = get_args(dep_arg.annotation)[0]
             dep = self.container[tp]

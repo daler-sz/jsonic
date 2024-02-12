@@ -7,7 +7,10 @@ from dishka.integrations.base import wrap_injection
 
 from jsonic_rpc._internal.abstractions.di import BaseDiInjector, Depends
 from jsonic_rpc._internal.abstractions.method import RegisteredMethod
-from jsonic_rpc._internal.abstractions.serializing import BaseLoader, MethodArgs
+from jsonic_rpc._internal.abstractions.serializing import (
+    BaseLoader,
+    MethodArgs,
+)
 from jsonic_rpc._internal.method_introspection import method_non_depends_args
 from jsonic_rpc._internal.types import Params, Result
 
@@ -53,7 +56,9 @@ class DiInjector(BaseDiInjector[Context]):
 
         with container({MethodArgs: loaded_args}) as subcontainer:
             injected = wrap_injection(
-                method.origin, container_getter=lambda a, b: subcontainer, parse_dependency=default_parse_dependency
+                method.origin,
+                container_getter=lambda a, b: subcontainer,
+                parse_dependency=default_parse_dependency,
             )
             return injected(*loaded_args.positionals, **loaded_args.keywords)
 
@@ -70,6 +75,10 @@ class DiInjector(BaseDiInjector[Context]):
 
         async with container({MethodArgs: loaded_args}) as subcontainer:
             injected = wrap_injection(
-                method.origin, container_getter=lambda: subcontainer, parse_dependency=default_parse_dependency
+                method.origin,
+                container_getter=lambda: subcontainer,
+                parse_dependency=default_parse_dependency,
             )
-            return await injected(*loaded_args.positionals, **loaded_args.keywords)
+            return await injected(
+                *loaded_args.positionals, **loaded_args.keywords
+            )

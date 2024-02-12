@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping, TypeVar, cast
 
-from jsonic_rpc._internal.abstractions.exception_handling import BaseExceptionConfiguration
+from jsonic_rpc._internal.abstractions.exception_handling import (
+    BaseExceptionConfiguration,
+)
 from jsonic_rpc._internal.abstractions.exceptions import JsonRpcError
 from jsonic_rpc._internal.abstractions.serializing import BaseDumper
 from jsonic_rpc._internal.types import OutputMapping, Request

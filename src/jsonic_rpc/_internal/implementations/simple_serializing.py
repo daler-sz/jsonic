@@ -2,9 +2,17 @@ import collections.abc
 from inspect import Parameter
 from typing import Sequence, cast
 
-from jsonic_rpc._internal.abstractions.exceptions import InvalidParams, InvalidRequest, JsonRpcError
+from jsonic_rpc._internal.abstractions.exceptions import (
+    InvalidParams,
+    InvalidRequest,
+    JsonRpcError,
+)
 from jsonic_rpc._internal.abstractions.method import RegisteredMethod
-from jsonic_rpc._internal.abstractions.serializing import BaseDumper, BaseLoader, MethodArgs
+from jsonic_rpc._internal.abstractions.serializing import (
+    BaseDumper,
+    BaseLoader,
+    MethodArgs,
+)
 from jsonic_rpc._internal.types import (
     ErrorResponse,
     InputMapping,
@@ -66,12 +74,18 @@ class SimpleLoader(BaseLoader):
                 name = arg.name
                 value = params.pop(name)
             except KeyError:
-                raise InvalidParams(message="Invalid params member in request body", data=arg.name)
+                raise InvalidParams(
+                    message="Invalid params member in request body",
+                    data=arg.name,
+                )
 
             if arg.kind == Parameter.POSITIONAL_ONLY:
                 positionals.append(value)
                 map_[name] = value
-            elif arg.kind in (Parameter.KEYWORD_ONLY, Parameter.POSITIONAL_OR_KEYWORD):
+            elif arg.kind in (
+                Parameter.KEYWORD_ONLY,
+                Parameter.POSITIONAL_OR_KEYWORD,
+            ):
                 keywords[name] = value
                 map_[name] = value
             elif arg.kind == Parameter.VAR_POSITIONAL:

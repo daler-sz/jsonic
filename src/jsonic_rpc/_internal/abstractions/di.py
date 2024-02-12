@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Annotated, Any, Generic, TypeVar
 
-from jsonic_rpc._internal.abstractions.method import AsyncRegisteredMethod, SyncRegisteredMethod
+from jsonic_rpc._internal.abstractions.method import (
+    AsyncRegisteredMethod,
+    SyncRegisteredMethod,
+)
 from jsonic_rpc._internal.abstractions.serializing import BaseLoader
 from jsonic_rpc._internal.types import Params, Result
 

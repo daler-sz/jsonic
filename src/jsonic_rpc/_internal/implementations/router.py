@@ -11,8 +11,12 @@ from jsonic_rpc._internal.method_introspection import make_registered
 @dataclass
 class Router(BaseRouter):
     prefix: str = ""
-    routes: MutableMapping[str, RegisteredMethod] = field(default_factory=dict, init=False)
-    routers: MutableSequence[BaseRouter] = field(default_factory=list, init=False)
+    routes: MutableMapping[str, RegisteredMethod] = field(
+        default_factory=dict, init=False
+    )
+    routers: MutableSequence[BaseRouter] = field(
+        default_factory=list, init=False
+    )
 
     def _make_path(self, name):
         if self.prefix:
@@ -26,7 +30,9 @@ class Router(BaseRouter):
         allow_notifications: bool,
         allow_requests: bool,
     ) -> RegisteredMethod:
-        registered_method: RegisteredMethod = make_registered(method, allow_notifications, allow_requests, name)
+        registered_method: RegisteredMethod = make_registered(
+            method, allow_notifications, allow_requests, name
+        )
         path = self._make_path(registered_method.name)
         self.routes[path] = registered_method
         return registered_method

@@ -52,8 +52,12 @@ class BaseRouter(ABC):
         if not method:
 
             def decorator(method: Method):
-                return self._register_method(method, name, allow_notifications, allow_requests)
+                return self._register_method(
+                    method, name, allow_notifications, allow_requests
+                )
 
             return decorator
 
-        return self._register_method(method, name, allow_notifications, allow_requests)
+        return self._register_method(
+            method, name, allow_notifications, allow_requests
+        )

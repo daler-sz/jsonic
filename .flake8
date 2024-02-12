@@ -3,7 +3,7 @@ count=False
 statistics=False
 show-source=False
 
-max-line-length=120
+max-line-length=79
 
 exclude=
     .venv,
