@@ -60,8 +60,8 @@ class Processor(BaseProcessor[Context]):
         if not method.allow_requests and isinstance(message, Request):
             raise InvalidRequest(
                 message=f"Method {path} can not process no-notification "
-                        f"requests. Please, consider do not"
-                        f"specifying id member in request body",
+                f"requests. Please, consider do not"
+                f"specifying id member in request body",
                 data=path,
             )
 

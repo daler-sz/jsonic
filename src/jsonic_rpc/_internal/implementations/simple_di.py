@@ -1,7 +1,10 @@
 from inspect import Parameter, signature
-from typing import Any, Iterable, Mapping, get_args
+from typing import Annotated, Any, Iterable, Mapping, TypeVar, get_args
 
-from jsonic_rpc._internal.abstractions.di import BaseDiInjector
+from jsonic_rpc._internal.abstractions.di import (
+    BaseDiInjector,
+    DependsMetadata,
+)
 from jsonic_rpc._internal.abstractions.method import (
     AsyncRegisteredMethod,
     RegisteredMethod,
@@ -13,6 +16,9 @@ from jsonic_rpc._internal.method_introspection import (
     method_non_depends_args,
 )
 from jsonic_rpc._internal.types import Params, Result
+
+T = TypeVar("T")
+Dependency = Annotated[T, DependsMetadata]
 
 
 class SimpleDiInjector(BaseDiInjector[dict]):

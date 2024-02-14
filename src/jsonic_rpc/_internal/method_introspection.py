@@ -1,7 +1,7 @@
 from inspect import Parameter, Signature, iscoroutinefunction, signature
 from typing import Annotated, Sequence, get_args, get_origin
 
-from jsonic_rpc._internal.abstractions.di import Depends
+from jsonic_rpc._internal.abstractions.di import DependsMetadata
 from jsonic_rpc._internal.abstractions.method import (
     AsyncRegisteredMethod,
     Method,
@@ -17,8 +17,8 @@ def method_is_by_position(method_signature: Signature) -> bool:
 
 def _parameter_is_dependency(parameter: Parameter):
     annotation = parameter.annotation
-    return get_origin(annotation) is Annotated or any(
-        [isinstance(arg, Depends) for arg in get_args(annotation)]
+    return get_origin(annotation) is Annotated and any(
+        [arg == DependsMetadata for arg in get_args(annotation)]
     )
 
 

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Annotated, Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from jsonic_rpc._internal.abstractions.method import (
     AsyncRegisteredMethod,
@@ -8,15 +8,10 @@ from jsonic_rpc._internal.abstractions.method import (
 from jsonic_rpc._internal.abstractions.serializing import BaseLoader
 from jsonic_rpc._internal.types import Params, Result
 
-
-class Depends:
-    def __init__(self, param: Any = None):
-        self.param = param
-
+DependsMetadata = "DependsMetadata"
 
 T = TypeVar("T")
 Context = TypeVar("Context")
-Dependency = Annotated[T, Depends()]
 
 
 class BaseDiInjector(ABC, Generic[Context]):
